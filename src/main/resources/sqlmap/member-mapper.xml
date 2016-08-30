@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper
+ 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+	<mapper namespace="member">
+	<resultMap type="MemberVO" id="memberResult">
+		<id property="code" column="code" />
+		<result property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="reg_date" column="reg_date" />
+		<result property="state" column="state" />
+		<result property="grade" column="grade" />
+	</resultMap>
+
+		<select id="selectMaxMemberCode" resultType="String">
+		select max(code)
+		  from tb_member
+	</select>
+	
+	<insert id="insertMemeber" parameterType="MemberVO">
+		insert into tb_member
+			   (code,
+			    id,
+			    name,
+			    reg_date)
+			   values
+			   (#{code}, #{id}, #{name},now())
+	</insert>
+	
+	<select id="selectCompareMemberId" parameterType="MemberVO" resultType="Integer">
+		select count(id)
+		from tb_member
+		where id = #{id}
+	</select>
+	
+	<select id="selectMemberCode" parameterType="MemberVO" resultType="String">
+		select code 
+      	from tb_member
+		where id = #{id}
+	</select>
+	
+	<select id="selectMemberInfoToCode" parameterType="MemberVO" resultType="MemberVO">
+		select *
+		from tb_member
+		where code = #{code}
+	</select>
+	
+	<select id="selectMemberInfoToToken" parameterType="MemberVO" resultType="MemberVO">
+		select *
+		from tb_member
+		where id = #{id}
+	</select>
+	
+	<select id="getMemberInfo" parameterType="map" resultType="MemberVO">
+		select * 
+		  from tb_member
+		 where id = #{id}
+	</select>
+
+	<!-- admin -->
+	<select id="memberListTotalCnt"  parameterType="map" resultType="int">
+		select count(code) as cnt
+		 from tb_member
+		 where state is not null
+		<if test="searchNm != null and searchNm != ''">
+		   and (id = #{searchNm} or name = #{searchNm})
+		</if>
+		<if test="id != null and id != ''">
+		   and id = #{id}
+		</if>
+	</select>
+	<select id="memberList"  parameterType="map" resultMap="memberResult">
+		select code,
+		       id,
+		       name,
+		       left(reg_date,10) as reg_date,
+		       state,
+		       grade
+		 from tb_member
+		 where state is not null
+		<if test="searchNm != null and searchNm != ''">
+		   and (id like concat('%', #{searchNm},'%') or name like concat('%', #{searchNm},'%'))
+		</if>
+		<if test="id != null and id != ''">
+		   and id = #{id}
+		</if>
+		<if test="limit != null and limit != ''">
+		 limit #{startIndex},#{limit}
+		</if>
+	</select>
+	
+	<update id="updateMember" parameterType="map">
+		update tb_member
+		   set code = #{code}
+		   <if test="state != null and state != ''">
+		      ,state = #{state}
+		   </if>
+		   <if test="grade != null and grade != ''">
+		      ,grade = #{grade}
+		   </if>
+		 where code = #{code}  
+	</update>
+
+	<update id="deleteMember" parameterType="map">
+		update tb_member
+		   set state = 'N'
+		 where code = #{memberCode}
+	</update>
+
+	<select id="memberCntList"  parameterType="map" resultType="map">
+		select count(pm.pay_seq)as cnt,
+		       p.meal_type,
+		       m.id,
+		       m.name
+		  from tb_pay_member pm left join tb_pay p on pm.pay_seq = p.seq
+		                        left join tb_member m on pm.member_code = m.code 
+		 where m.state is not null
+		   <if test="id != null and id != ''">   
+		   and m.id != #{id}
+		   </if>
+		   <if test="meal_type != null and meal_type != ''">
+		   and p.meal_type = #{meal_type}
+		   </if>
+			group by m.id
+			LIMIT 5
+	</select>
+	
+	<select id="memberTotalCnt"  parameterType="map" resultType="int">
+		select ifnull(sum(t.cnt),0) as tcnt 
+		  from(
+				select count(pm.pay_seq)as cnt,
+				       p.meal_type,
+				       m.id,
+				       m.name
+				  from tb_pay_member pm 
+				       left join tb_pay p on pm.pay_seq = p.seq
+				       left join tb_member m on pm.member_code = m.code 
+				 where m.state is not null
+				   <if test="id != null and id != ''">   
+				   and m.id != #{id}
+				   </if>
+				   <if test="meal_type != null and meal_type != ''">
+				   and p.meal_type = #{meal_type}
+				   </if>
+				   <if test="id != null and id != ''">   
+				 group by m.id
+				   </if>
+		       )t
+	</select>
+
+	<select id="restaurantCntList" parameterType="map" resultType="map">
+		select m.id,
+               p.meal_type,
+               r.name,
+               count(r.name) as cnt
+          from tb_pay_member pm left join tb_pay p on pm.pay_seq = p.seq
+             					left join tb_member m on pm.member_code = m.code
+                      left join tb_restaurant r on p.restaurant_code = r.code
+         where pm.pay_seq is not null
+           <if test="id != null and id != ''">   
+		   and m.id = #{id}
+		   </if>
+		   <if test="meal_type != null and meal_type != ''">
+		   and p.meal_type = #{meal_type}
+		   </if>
+		     group by r.code, m.id  
+		     LIMIT 5
+	</select>
+	
+	<select id="restarurantTotalCnt" parameterType="map" resultType="int">
+		select ifnull(sum(t.cnt),0) as total
+	      from (
+	            select m.id,
+	                   p.meal_type,
+	                   r.name,
+	                   count(r.name) as cnt
+	              from tb_pay_member pm left join tb_pay p on pm.pay_seq = p.seq
+	                 					left join tb_member m on pm.member_code = m.code
+	                          left join tb_restaurant r on p.restaurant_code = r.code
+	             where pm.pay_seq is not null
+	                <if test="id != null and id != ''">   
+				   and m.id = #{id}
+				   </if>
+				   <if test="meal_type != null and meal_type != ''">
+				   and p.meal_type = #{meal_type}
+				   </if>
+				     group by r.code, m.id  
+				     LIMIT 5                    
+	            )t 
+	
+	</select>
+	
+	
+	<!-- android restaurant -->
+	<select id="getRestaurantList" resultType="map">
+	select r.name, 
+	       concat(i.file_path,i.real_name)as file 
+	  from tb_restaurant r left join tb_image i on r.code = i.code 
+	 where i.file_path is not null
+	</select>
+	
+
+</mapper>

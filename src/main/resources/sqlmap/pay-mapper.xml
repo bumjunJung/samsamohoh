@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper
+ 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pay">
+		
+	<select id="getPayDataList" parameterType="map" resultType="map">
+        select t.settling_date, 
+               t.id, 
+               t.meal_type, 
+               sum(price) as price
+          from(
+            select DATE_FORMAT(p.settling_date,'%Y-%m-%d') as settling_date,
+                   m.id,
+                   p.meal_type,
+                   pm.price
+              from tb_pay_member pm left join tb_pay p on pm.pay_seq = p.seq
+                 					left join tb_member m on pm.member_code = m.code
+              )t
+         where t.settling_date is not null  
+		   <if test="id != null and id != ''">
+           and t.id = #{id}
+		   </if>
+		   <if test="meal_type != null and meal_type != ''">
+           and t.meal_type = #{meal_type}
+		   </if>
+		   <if test="searchYear != null and searchYear != ''">
+           and left(t.settling_date,4) = #{searchYear}
+		   </if>
+		   <if test="searchMonth != null and searchMonth != ''">
+           and  substring(t.settling_date,6,2) = #{searchMonth}
+		   </if>
+         group by t.meal_type
+         LIMIT 5
+	</select>
+	
+	
+</mapper>

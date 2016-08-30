@@ -1,0 +1,13 @@
+define({
+  "name": "SamSamOhOh API",
+  "version": "0.1.0",
+  "description": "For apps and communication with SamSamOhOh Project ",
+  "sampleUrl": false,
+  "apidoc": "0.2.0",
+  "generator": {
+    "name": "apidoc",
+    "time": "2016-07-21T07:03:24.659Z",
+    "url": "http://apidocjs.com",
+    "version": "0.16.1"
+  }
+});

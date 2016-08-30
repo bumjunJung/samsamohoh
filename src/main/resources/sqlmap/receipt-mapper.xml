@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper
+ 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="receipt">
+	<resultMap type="PayVO" id="PayResult">
+		<id property="seq" column="seq" />
+		<result property="card_type" column="card_type" />
+		<result property="meal_type" column="meal_type" />
+		<result property="members" column="members" />
+		<result property="restaurant_code" column="restaurant_code" />
+		<result property="card_no" column="card_no" />
+		<result property="settling_date" column="settling_date" />
+		<result property="total_price" column="total_price" />
+		<result property="etc" column="etc" />
+		<result property="reg_code" column="reg_code" />
+	</resultMap>
+
+	<select id="getReceiptList" parameterType="map" resultType="map">
+		select pm.pay_seq,
+		DATE_FORMAT(p.settling_date, '%Y-%m-%d')as settling_date,
+		p.meal_type,
+		count(pm.member_code)as cnt,
+		p.total_price,
+		ifnull(p.etc,'-')as etc
+		from tb_pay p left join tb_pay_member pm on p.seq = pm.pay_seq
+		where pm.pay_seq is not null
+		<if test="searchYear != null and searchYear != ''">
+			and left(p.settling_date,4) = #{searchYear}
+		</if>
+		<if test="searchMonth != null and searchMonth != ''">
+			and substring(p.settling_date,6,2) = #{searchMonth}
+		</if>
+		<if test="searchDay != null and searchDay != ''">
+			and substring(p.settling_date,9,2) = #{searchDay}
+		</if>
+		group by pm.pay_seq
+		order by settling_date desc
+		limit #{startIndex},#{limit}
+	</select>
+
+	<select id="getReceiptListTotalCnt" parameterType="map" resultType="int">
+		select count(*) as cnt
+		  from (
+		    		select pm.pay_seq,
+		           		 DATE_FORMAT(p.settling_date, '%Y-%m-%d')as settling_date,
+		          		 p.meal_type,
+		          		 count(pm.member_code)as cnt,
+		          		 p.total_price,
+		          	 	 ifnull(p.etc,'-')as etc
+		    	  	from tb_pay p left join tb_pay_member pm on p.seq = pm.pay_seq
+		    		 where pm.pay_seq is not null
+		    		 <if test="searchYear != null and searchYear != ''">
+						and left(p.settling_date,4) = #{searchYear}
+					 </if>
+					 <if test="searchMonth != null and searchMonth != ''">
+					 	and substring(p.settling_date,6,2) = #{searchMonth}
+					 </if>
+					 <if test="searchDay != null and searchDay != ''">
+					 	and substring(p.settling_date,9,2) = #{searchDay}
+					 </if>
+		    		 group by pm.pay_seq
+			    )t
+	</select>
+
+	<select id="getParticipantNames" parameterType="map" resultType="map">
+		 select m.name
+	       from tb_pay_member pm left join tb_member m on pm.member_code = m.code
+	      where pm.pay_seq = #{pay_seq}
+	</select>
+
+
+	<update id="modifyReceipt" parameterType="map">
+		update tb_pay
+		set seq = #{seq}
+		    ,meal_type = #{meal_type}
+		    ,members = #{memberList}
+		    ,etc = #{etc}
+		    ,total_price = #{total_price}
+		where seq = #{seq}
+	</update>
+	
+	<delete id="deleteReceipt" parameterType="map">
+		delete from tb_pay
+		 where seq = #{seq}
+	</delete>
+	
+	<delete id="deletePayMember" parameterType="int">
+		delete from tb_pay_member
+		 where pay_seq = #{seq}
+	</delete>
+	
+	<select id="getFamilyInfo" parameterType="map" resultType="map">
+	 select fm.family_seq, fm.member_code, m.name, r.name as restaurantName, r.code 
+     from tb_family_member fm left join tb_family f on f.seq = fm.family_seq
+                              left join tb_member m on fm.member_code = m.code
+                              left join tb_restaurant r on f.restaurant_code = r.code
+    where family_seq = (select fm.family_seq
+                          from tb_family_member fm left join tb_family f on fm.family_seq = f.seq
+                         where fm.member_code = #{code} 
+                           and left(f.reg_date, 10) = #{searchDate}
+                           and f.meal_type = #{meal_type})
+	</select>
+	
+	<select id="findeMemberInfo" parameterType="map" resultType="MemberVO">
+	 select code, 
+	        name 
+	  from tb_member 
+	 where name = #{member_name}
+	</select>
+	<select id="findeRestaurantInfo" parameterType="map" resultType="RestaurantVO">
+	 select code, 
+	        name 
+	  from tb_restaurant 
+	 where name = #{restaurant_name}
+	</select>
+
+	<insert id="insertRecipt" parameterType="map">
+		insert into tb_pay(card_type,
+		                   meal_type,
+		                   members,
+		                   restaurant_code,
+		                   etc,
+		                   settling_date,
+		                   card_no,
+		                   total_price,
+		                   reg_code)
+		            values( #{card_type},
+		                    #{meal_type},
+		                    #{memberList},
+		                    #{restaurant_code},
+		                    #{etc},
+		                    #{settling_date},
+		                    #{card_no},
+		                    #{total_price},
+		                    #{reg_code})
+	</insert>
+	
+	<select id="getPaySeq" resultType="int">
+		select max(seq) as pay_seq 
+		  from tb_pay
+	</select>
+	
+	<insert id="insertPayMember" parameterType="map">
+		insert into tb_pay_member (pay_seq,
+	                           	   member_code,
+	                           	   price)
+		                    values(#{pay_seq},
+		                           #{member},
+		                           #{price})
+	</insert>
+
+	<select id="insertCheck" parameterType="map" resultType="int">
+		select count(member_code) as cnt
+		  from tb_pay_member pm left join tb_pay p on p.seq = pm.pay_seq 
+		 where pm.member_code = #{member_code}
+		   and left(p.settling_date,10) = #{searchDate}
+		   and p.meal_type = #{meal_type}
+	</select>
+
+	<select id="receiptInfo" parameterType="map" resultMap="PayResult">
+	 	select DATE_FORMAT(settling_date,'%Y-%m-%d') as settling_date, 
+	 	       meal_type, 
+	 	       etc, 
+	 	       total_price
+ 		from tb_pay 
+ 		where seq = #{seq}
+	</select>
+	
+	<select id="receiptMembers" parameterType="map" resultType="map">
+	 	select pm.member_code, 
+               m.name
+  		  from tb_pay_member pm left join tb_member m on m.code = pm.member_code
+    	 where pm.pay_seq = #{seq}
+	</select>
+
+</mapper>

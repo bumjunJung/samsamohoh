@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper
+ 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="family">
+   <resultMap type="FamilyVO" id="familyResult">
+    <id property="seq" column="seq"/>
+    <result property="reg_date" column="reg_date"/>
+    <result property="restaurant_code" column="restaurant_code"/>
+    <result property="members" column="members"/>
+    <result property="meal_type" column="meal_type"/>
+  </resultMap> 
+  
+  <select id="familyListTotalCount" resultType="int" parameterType="map">
+   	select
+      	count(family_seq)
+       from (
+           select  
+              fm.family_seq,
+                   DATE_FORMAT(f.reg_Date,'%Y-%m-%d')as reg_date,
+                   r.name,
+                   count(m.name)as cnt,
+                 f.meal_type
+               from tb_family_member fm left join tb_member m on fm.member_code = m.code
+                                        left join tb_family f on f.seq = fm.family_seq
+                                        left join tb_restaurant r on f.restaurant_code = r.code
+           where f.reg_date is not null
+             <if test="searchYear != null and searchYear != ''">
+               and left(f.reg_date,4) = #{searchYear}
+             </if>
+             <if test="searchMonth != null and searchMonth != ''">
+               and  substring(f.reg_date,6,2) = #{searchMonth}
+             </if>
+             <if test="searchDay != null and searchDay != ''">
+             and substring(f.reg_date,9,2) = #{searchDay}
+             </if>
+              group by fm.family_seq
+          ) a
+  </select>
+  
+  
+  <select id="familyList" resultType="map" parameterType="map">
+      select fm.family_seq,
+             DATE_FORMAT(f.reg_date,'%Y-%m-%d')as reg_date,
+             r.name,
+             count(m.name)as cnt,
+           f.meal_type
+        from tb_family_member fm left join tb_member m on fm.member_code = m.code
+                                 left join tb_family f on f.seq = fm.family_seq
+                                 left join tb_restaurant r on f.restaurant_code = r.code
+     where f.reg_date is not null
+       <if test="searchYear != null and searchYear != ''">
+         and left(f.reg_date,4) = #{searchYear}
+       </if>
+       <if test="searchMonth != null and searchMonth != ''">
+         and  substring(f.reg_date,6,2) = #{searchMonth}
+       </if>
+       <if test="searchDay != null and searchDay != ''">
+         and substring(f.reg_date,9,2) = #{searchDay}
+       </if>
+       
+     group by fm.family_seq
+     order by f.reg_date desc
+     limit #{startIndex},#{limit}
+  </select>
+  
+  <select id="familyMembersName" resultType="map" parameterType="map">
+       select m.name
+        from tb_family_member fm left join tb_member m on fm.member_code = m.code
+       where fm.family_seq = #{family_seq}
+  </select>
+  
+  <select id="selectMaxFamillySeq" resultType="Integer">
+    select ifnull(max(seq), 0)
+    from tb_family
+  </select>
+
+<insert id="insertJoinFamily" parameterType="map">
+    insert into
+      tb_family(
+        seq,
+        reg_date,
+        restaurant_code,
+        members,
+        meal_type,
+        active_type
+      )
+    values(
+      #{seq},
+      now(),
+        #{restaurant_code},
+        #{member_code},
+        #{meal_type},
+        "Y"
+    )
+  </insert>
+  
+  <insert id="insertJoinFamilyMember" parameterType="map">
+    insert into 
+      tb_family_member(
+        family_seq,
+        member_code
+      ) 
+    values( 
+      (select 
+        seq 
+      from 
+        tb_family
+      where
+        members = #{member_code}
+      and 
+        restaurant_code = #{restaurant_code}
+      and 
+        date(reg_date) = curdate()
+      ),
+      #{member_code}       
+    )
+  </insert>
+  
+  <select id="selectFamilyLunchListAll" resultType="map">
+    select 
+            r.name as restaurant_name,
+            f.members as members,
+            f.restaurant_code as code,
+            f.meal_type as meal_type,
+            f.seq as seq,
+            i.real_name as real_name,
+            i.change_name as change_name
+    from 
+      tb_family as f
+    left join
+      tb_restaurant as r
+    on
+      f.restaurant_code = r.code
+    left join
+      tb_image as i
+    on 
+      i.code = f.restaurant_code
+    left join
+      tb_family_member as fm
+        on
+      fm.family_seq = f.seq
+    where 
+      date(f.reg_date) = curdate()
+    and
+      f.meal_type = 0
+    group by
+      f.reg_date
+    order by
+      r.reg_date
+  </select>
+  
+  <select id="selectFamilyDinnerListAll" resultType="map">
+    select 
+            r.name as restaurant_name,
+            f.members as members,
+            f.restaurant_code as code,
+            f.meal_type as meal_type,
+            f.seq as seq,
+            i.real_name as real_name,
+            i.change_name as change_name
+	    from 
+	      tb_family as f
+	    left join
+	      tb_restaurant as r
+	    on
+	      f.restaurant_code = r.code
+	    left join
+	      tb_image as i
+	    on 
+	      i.code = f.restaurant_code
+	    left join
+	      tb_family_member as fm
+	        on
+	      fm.family_seq = f.seq
+	    where 
+	      date(f.reg_date) =  curdate()
+	    and
+	      f.meal_type = 1
+	    group by
+	      f.reg_date
+	    order by
+	      r.reg_date
+	</select>
+	
+	<update id="updateJoinFamilyMembers" parameterType="map">
+		update 
+			tb_family
+		set
+			members = (	select 
+							*
+						from
+							(	select
+									GROUP_CONCAT( member_code SEPARATOR  ', ' )   
+							 	from
+									tb_family_member as fm 
+								left join
+									tb_family as f
+								on
+									fm.family_seq = f.seq
+								where 
+									f.seq = #{family_seq}
+								and 
+									date(f.reg_date) =  curdate()
+								) as memberTable
+						)
+		where 
+			seq = #{family_seq}
+		and
+			date(reg_date) <![CDATA[=]]>  curdate()
+	</update>
+	
+	<insert id="insertModifyFamilyMember" parameterType="map">
+		insert into 
+			tb_family_member(
+				family_seq,
+				member_code
+			) 
+		values( 
+			#{family_seq},
+			#{member_code}			 
+		)
+	</insert>
+	
+	<select id="selectMembers" parameterType="map" resultType="map">
+		select 
+			f.members as members,
+			f.restaurant_code as code,
+			i.change_name as change_name
+		from 
+			tb_family as f
+		left join
+			tb_image as i
+		on
+			f.restaurant_code = i.code
+		where
+			f.seq = #{family_seq}
+	</select>
+	
+	<select id="selectMembersName" parameterType="map" resultType="map">
+		select
+			name
+		from
+			tb_member
+		where
+			code = #{member_code}
+		order by
+			name
+	</select>
+	
+	
+	<select id="selectBeforeLunchFamilySeq" parameterType="String" resultType="String">
+		select 
+			ifnull(f.seq, 0) as family_seq
+		from 
+			tb_family as f 
+		left join
+			tb_family_member as fm
+		on
+			fm.family_seq = f.seq
+		where 
+			f.members like concat('%', #{member_code}, '%')
+		and 
+			date(f.reg_date) =  curdate()
+		and
+			f.meal_type = 0
+		group by
+			f.seq
+		order by
+			f.reg_date
+	</select>
+	
+	<select id="selectBeforeDinnerFamilySeq" parameterType="String" resultType="String">
+		select 
+			ifnull(f.seq, 0) as family_seq
+		from 
+			tb_family as f 
+		left join
+			tb_family_member as fm
+		on
+			fm.family_seq = f.seq
+		where 
+			f.members like concat('%', #{member_code}, '%')
+		and 
+			date(f.reg_date) =  curdate()
+		and
+			f.meal_type = 1
+		group by
+			f.seq
+		order by
+			f.reg_date
+	</select>
+	
+	<select id="selectAfterLunchFamilySeq" parameterType="String" resultType="int">
+		select 
+			seq
+		from 
+			tb_family
+		where
+			restaurant_code = #{restaurant_code}
+		and
+			date(reg_date) =  curdate()
+		and
+			meal_type = 0
+	</select>
+	
+		<select id="selectAfterDinnerFamilySeq" parameterType="String" resultType="int">
+		select 
+			seq
+		from 
+			tb_family
+		where
+			restaurant_code = #{restaurant_code}
+		and
+			date(reg_date) =  curdate()
+		and
+			meal_type = 1
+	</select>
+	
+	<select id="selectRestautrantLunch_codeToFamily" parameterType="String" resultType="String">
+		select
+			restaurant_code
+		from
+			tb_family
+		where
+			restaurant_code = #{restaurant_code}
+		and
+			date(reg_date) = curdate()
+		and 
+			meal_type = 0
+		group by
+			restaurant_code
+	</select>
+	
+	<select id="selectRestautrantDinner_codeToFamily" parameterType="String" resultType="String">
+		select
+			restaurant_code
+		from
+			tb_family
+		where
+			restaurant_code = #{restaurant_code}
+		and
+			date(reg_date) = curdate()
+		and 
+			meal_type = 1
+		group by
+			restaurant_code
+	</select>
+	
+	<insert id="insertMoveFamily" parameterType="map">
+		insert into 
+			tb_family_member(
+				family_seq,
+				member_code
+			) 
+		values( 
+			#{family_seq},
+			#{member_code}			 
+		)
+	</insert>
+	
+	<delete id="deleteFamilyMember" parameterType="map">
+		delete from 
+			tb_family_member 
+		where 
+			member_code = #{member_code} 
+		and 
+			family_seq = #{family_seq}
+	</delete>
+	
+	<select id="selectMembersIsNullSeq" resultType="map">
+		select
+			seq
+		from
+			tb_family
+		where
+			members is null
+	</select>	
+	
+	<update id="updateActive_typeN" parameterType="String">
+		update 
+			tb_family 
+		set
+			active_type = 'N'
+		where
+			seq = #{active_seq}
+	</update>
+	
+	<select id="selectMembersIsNotNullSeq" resultType="map">
+		select
+			seq
+		from
+			tb_family
+		where
+			members is not null
+	</select>	
+	
+	<update id="updateActive_typeY" parameterType="String">
+		update 
+			tb_family 
+		set
+			active_type = 'Y'
+		where
+			seq = #{active_seq}
+	</update>
+	
+	<select id="selectFamilyMemberCode" resultType="String" parameterType="String">
+		select 
+			code
+		from
+			tb_member
+		where
+			id = #{param}
+	</select>
+</mapper>

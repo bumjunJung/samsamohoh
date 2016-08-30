@@ -1,0 +1,279 @@
+@CHARSET "UTF-8";
+
+.mainBigBox{
+	width: 100%;
+	height: auto;	
+	overflow: auto;
+}
+
+.topBigBox{
+	width: 100%;
+	height: auto;
+	min-height: 475px;
+	padding: 30px;
+	overflow: auto;
+	border: 1px;
+	border-style: solid;
+	border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.topBox{
+	text-align: center;
+	width: 100%;
+	height: auto;
+	min-height: 395px;
+	overflow: auto;
+}
+
+.middleBox{
+	text-align: center;
+	width: 100%;
+	height: 60px;
+	padding:10px;
+}
+
+.bottomBigBox{
+	width: 100%;
+	height: auto;
+	min-height: 475px;
+	padding: 30px;
+	overflow: auto;
+	border: 1px;
+	border-style: solid;
+	border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.bottomBox{
+	text-align: center;
+	width: 100%;
+	height: auto; 
+	min-height: 395px;
+	overflow: auto;
+}
+
+.mainListBox{
+	float: left;
+	display: inline;
+	width: 400px;
+	height: 350px;
+	margin-left: 70px;
+	margin-bottom: 20px;
+	border: 1px;
+	border-style: solid;
+}
+
+.boxTitle{
+	width: 398px;
+	height: 50px;
+	text-align: center;
+	padding-top: 20px;
+	border-bottom: 1px;
+	border-bottom-style: solid;
+}
+
+.boxImage{
+	width: 398px;
+	height: 253px;
+	background-color: white;
+}
+
+.boxFamliyImage{
+	width: 398px;
+	height: 303px;
+	background-color: white;
+}
+
+.joinButtonBox{
+	width: 398px;
+	height: 50px;
+}
+
+.joinButton{
+	width: 398px;
+	height: 45px;
+}
+
+.addRestaurant{
+	width: 100px;
+	height: 40px;
+	float: right;
+}
+
+.main-link{
+	font-weight: 800;
+	margin-left: 20px;
+}
+
+.searchBox{
+	width: 300px;
+	float: right;
+}
+
+.searchText{
+	position: relative;
+	z-index: 2;
+	float: left;
+	height : 40px;
+}
+
+.btn-restaurantSearch{
+	position: relative;
+    z-index: 2;
+    float: left;
+    height: 40px;
+}
+
+/* 식당 추가 화면 */
+.addRestaurantBigBox{
+	background-color: fff;
+	width: 90%;
+	height: auto;
+	overflow: auto;
+}
+
+.modifyRestaurantForm{
+	width: 500px;
+	border: 3px;
+	border-style: double;
+	padding: 30px;
+	margin: 10px;
+	text-align: center;
+}
+
+.addRestaurantForm{
+	width: 500px;
+	border: 3px;
+	border-style: double;
+	padding: 30px;
+	margin: 10px;
+	text-align: center;
+}
+
+.inputRestaurant{
+	width: 200px;
+	text-align: left;
+	margin: auto;
+}
+
+.form-control{
+	width: 200px;
+	margin: auto;
+}
+
+.validateMessage{
+	color: red;
+	font-family: fantasy;
+}
+
+.detailBox{
+	width: 600px;
+	padding: 10px;
+	margin: auto;
+	text-align: center;
+	float : left;
+}
+
+.restaurantDetailTable{
+	margin: auto;
+	width: 600px;
+}
+.restaurantDetailTable th{
+	width: 150px;
+	height: 50px;
+	text-align: center;
+}
+
+.replyBox{
+	width: 600px;
+	height: auto;
+	overflow: auto;
+	padding: 30px;
+	margin-top : 50px;
+	margin: auto;
+	text-align: left;
+}
+
+.reply_content{
+	width: 450px;
+}
+
+.replySubmit{
+	float: right;
+}
+
+.replyListBox{
+	width : 450px;
+}
+
+.replyListBox1{
+	margin-top: 20px;
+	float: left;
+	width: 450px;
+	border-color: #EAEAEA;
+	border-style: solid;
+}
+
+.replyListBox2{
+	margin-top: 20px;
+	text-align: right;
+	font-family: sans-serif fantasy;
+	border-color: #EAEAEA;
+	border-style: dotted;
+}
+
+.deleteReplyButton{
+	float: left;
+}
+
+.familyListBox{
+	float: left;
+	display: inline;
+	width: 400px;
+	height: 350px;
+	margin-left: 70px;
+	margin-bottom: 20px;
+	border: 1px;
+	border-style: solid;
+}
+
+.famlilyJoinButton{
+	width: 398px;
+	height: 45px;
+}
+
+.boxMembers{
+	width: 52px;
+	float: right;
+}
+
+.btnMembers{
+	width: 49px;
+	height: 49px;
+	margin: auto;
+}
+.boxTitleFamily{
+	width: 348px;
+	height: 50px;
+	text-align: center;
+	padding-top: 20px;
+	float: left;
+}
+
+.familyTitle{
+	width: 400px;
+	float: left;
+	height: 50px;
+	border-bottom: 1px;
+	border-bottom-style: solid;
+}
+
+.image{
+	width: 500px;
+	height: auto;
+}
